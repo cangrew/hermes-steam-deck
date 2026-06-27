@@ -34,7 +34,13 @@ fi
 # Find a Chromium-class browser. SteamOS ships Flatpak Chrome/Chromium commonly.
 launch_browser() {
   local url="$1"
+  # A dedicated profile dir forces a NEW browser instance that honors --kiosk/
+  # --app. Without it, an already-running Chrome just opens the URL as a tab in
+  # the existing session ("Opening in existing browser session") and ignores the
+  # kiosk flags. The path is stable so your in-app settings persist.
+  local profile="${HERMES_KIOSK_PROFILE:-$HOME/.hermes-kiosk}"
   local args=(
+    --user-data-dir="$profile"
     --kiosk --start-fullscreen --no-first-run --noerrdialogs
     --disable-pinch --overscroll-history-navigation=0
     --autoplay-policy=no-user-gesture-required

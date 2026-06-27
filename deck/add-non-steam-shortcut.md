@@ -52,3 +52,13 @@ The default is `http://127.0.0.1:8642` for Hermes running on the Deck itself.
   API, so navigation works even with a minimal Steam Input layout.
 - Text entry uses the built-in on-screen keyboard (press **X** or activate any
   field). The Steam OSK (**STEAM + X**) also works when it attaches to a field.
+
+## Troubleshooting
+
+- **"Opening in existing browser session" / no fullscreen window:** Chrome was
+  already running, so it opened the app as a tab in that window. The launcher
+  now starts a dedicated browser instance (`--user-data-dir`) to avoid this. If
+  you still see it, fully quit Chrome and relaunch, or set a different profile:
+  `HERMES_KIOSK_PROFILE=$HOME/.hermes-kiosk2 ./deck/launch-kiosk.sh`.
+- **`Failed to load module "canberra-gtk-module"` / `Read channel stable`:**
+  harmless warnings from Chrome on SteamOS; ignore them.
