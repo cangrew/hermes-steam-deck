@@ -58,10 +58,11 @@ launch_browser() {
     "--app=${url}"
   )
   # Foreground (no `exec`) so the EXIT trap fires and stops the static server.
+  # --device=all lets the sandboxed browser read input devices (gamepad API).
   if command -v flatpak >/dev/null && flatpak info com.google.Chrome >/dev/null 2>&1; then
-    flatpak run com.google.Chrome "${args[@]}"
+    flatpak run --device=all com.google.Chrome "${args[@]}"
   elif command -v flatpak >/dev/null && flatpak info org.chromium.Chromium >/dev/null 2>&1; then
-    flatpak run org.chromium.Chromium "${args[@]}"
+    flatpak run --device=all org.chromium.Chromium "${args[@]}"
   elif command -v google-chrome-stable >/dev/null; then
     google-chrome-stable "${args[@]}"
   elif command -v chromium >/dev/null; then

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { setFocus } from "@noriginmedia/norigin-spatial-navigation";
+import { useEffect, useRef, useState } from "react";
+import { doesFocusableExist, setFocus } from "@noriginmedia/norigin-spatial-navigation";
 import { useOsk } from "../state/osk";
 import { FocusableButton, FocusSection } from "./focusables";
 
@@ -36,12 +36,20 @@ export function OnScreenKeyboard() {
     useOsk();
   const [layer, setLayer] = useState<Layer>("lower");
 
+  const wasOpen = useRef(false);
   useEffect(() => {
     if (open) {
       setLayer("lower");
       // Focus the keyboard once it has mounted.
       const t = setTimeout(() => setFocus(FIRST_KEY), 0);
+      wasOpen.current = true;
       return () => clearTimeout(t);
+    }
+    // On close, return focus to the field that opened the keyboard.
+    if (wasOpen.current) {
+      wasOpen.current = false;
+      const rk = useOsk.getState().returnFocusKey;
+      if (rk && doesFocusableExist(rk)) setFocus(rk);
     }
   }, [open]);
 

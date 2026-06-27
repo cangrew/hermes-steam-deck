@@ -55,6 +55,13 @@ The default is `http://127.0.0.1:8642` for Hermes running on the Deck itself.
 
 ## Troubleshooting
 
+- **Only the touchscreen works — sticks/buttons/trackpad do nothing:** the
+  shortcut is using the default **"Gamepad" controller template**, which the
+  browser can't read under Gamescope (and turns the trackpads into sticks, so
+  there's no mouse). Fix it: Steam button → **Controller Settings** → switch to a
+  **keyboard + mouse** layout (see [`steam-input-layout.md`](./steam-input-layout.md)):
+  right trackpad → Mouse, R2 → Left Click, D-pad → Arrow keys, A → Enter,
+  B → Escape. After that the cursor and focus navigation both work.
 - **"Opening in existing browser session" / no fullscreen window:** Chrome was
   already running, so it opened the app as a tab in that window. The launcher
   now starts a dedicated browser instance (`--user-data-dir`) to avoid this. If

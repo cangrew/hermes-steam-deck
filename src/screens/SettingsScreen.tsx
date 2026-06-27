@@ -1,3 +1,4 @@
+import { InputDebug } from "../components/InputDebug";
 import { FocusableButton, FocusableField, FocusSection } from "../input/focusables";
 import { quitApp } from "../lib/quit";
 import { useStore } from "../state/store";
@@ -77,6 +78,12 @@ export function SettingsScreen() {
         Research Hermes Agent. Navigate with the D-pad/stick, A to select, B to go back, X
         for the keyboard, LB/RB to switch tabs.
       </p>
+
+      <h2>Input diagnostics</h2>
+      <p className="muted">
+        Use this to check what the Deck's controls are sending to the app.
+      </p>
+      <InputDebug />
 
       <h2>Quit</h2>
       <p className="muted">

@@ -1,4 +1,10 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import {
+  doesFocusableExist,
+  getCurrentFocusKey,
+  ROOT_FOCUS_KEY,
+  setFocus,
+} from "@noriginmedia/norigin-spatial-navigation";
 import { TopBar, SCREEN_ORDER } from "./components/TopBar";
 import { ControllerHints } from "./components/ControllerHints";
 import { COMMON_HINTS } from "./components/hints";
@@ -43,6 +49,26 @@ export default function App() {
     void connect();
   }, [connect]);
 
+  // Make sure something is always focused so the D-pad / arrow keys have an
+  // anchor to move from. Without this, controller/keyboard input appears dead
+  // until you first tap the screen.
+  const focusDefault = useCallback(() => {
+    const preferred = screen === "chat" ? "composer-input" : `tab-${screen}`;
+    if (doesFocusableExist(preferred)) setFocus(preferred);
+    else if (doesFocusableExist(`tab-${screen}`)) setFocus(`tab-${screen}`);
+  }, [screen]);
+
+  const ensureFocus = useCallback(() => {
+    const cur = getCurrentFocusKey();
+    if (!cur || cur === ROOT_FOCUS_KEY || !doesFocusableExist(cur)) focusDefault();
+  }, [focusDefault]);
+
+  // Re-anchor focus when the screen changes (after the new screen renders).
+  useEffect(() => {
+    const t = setTimeout(focusDefault, 80);
+    return () => clearTimeout(t);
+  }, [focusDefault]);
+
   const cycleScreen = (delta: number) => {
     const i = SCREEN_ORDER.indexOf(screen);
     const next = SCREEN_ORDER[(i + delta + SCREEN_ORDER.length) % SCREEN_ORDER.length];
@@ -81,12 +107,33 @@ export default function App() {
     onNextScreen: () => cycleScreen(1),
     onStart: () => setScreen("settings"),
     onScroll: scroll,
+    ensureFocus,
   });
 
-  // Keyboard parity for dev / docked use: Escape acts as B (back).
+  // Keyboard parity — this is the reliable input path on the Steam Deck, where
+  // Steam Input maps the controls to keys. Arrow keys + Enter are handled by the
+  // spatial-navigation library; here we cover the rest so a keyboard layout can
+  // drive everything: Esc=back, [/]=switch tab, PageUp/PageDown=scroll.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") back();
+      ensureFocus();
+      switch (e.key) {
+        case "Escape":
+          back();
+          break;
+        case "[":
+          cycleScreen(-1);
+          break;
+        case "]":
+          cycleScreen(1);
+          break;
+        case "PageUp":
+          scroll("up");
+          break;
+        case "PageDown":
+          scroll("down");
+          break;
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

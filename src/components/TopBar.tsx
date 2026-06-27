@@ -49,6 +49,7 @@ export function TopBar() {
         {TABS.map((t) => (
           <FocusableButton
             key={t.id}
+            focusKey={`tab-${t.id}`}
             className={screen === t.id ? "tab tab-active" : "tab"}
             onPress={() => setScreen(t.id)}
           >

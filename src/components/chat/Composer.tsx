@@ -75,6 +75,7 @@ export function Composer() {
         />
         <FocusableField
           className="composer-input"
+          focusKey="composer-input"
           value={text}
           onChange={setText}
           onSubmit={submit}

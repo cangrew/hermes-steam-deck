@@ -16,6 +16,8 @@ export interface GamepadHandlers {
   onStart?: () => void;
   /** Triggers — page scroll. */
   onScroll?: (direction: "up" | "down") => void;
+  /** Ensure something is focused before navigating (anchors the focus cursor). */
+  ensureFocus?: () => void;
   /** When true, directional input is suppressed (e.g. an OSK owns the d-pad). */
   capture?: boolean;
 }
@@ -77,6 +79,7 @@ export function useGamepad(handlers: GamepadHandlers) {
 
       // --- Action buttons (edge-triggered) ---
       if (edge(BTN.A, pressed(BTN.A))) {
+        h.ensureFocus?.();
         const el = document.activeElement as HTMLElement | null;
         el?.click?.();
       }
@@ -103,7 +106,10 @@ export function useGamepad(handlers: GamepadHandlers) {
       if (nextDir !== dir) {
         dir = nextDir;
         nextDirAt = now + (nextDir ? FIRST_REPEAT_MS : 0);
-        if (nextDir && !h.capture) move(nextDir);
+        if (nextDir && !h.capture) {
+          h.ensureFocus?.();
+          move(nextDir);
+        }
       } else if (dir && now >= nextDirAt) {
         nextDirAt = now + REPEAT_MS;
         if (!h.capture) move(dir);
