@@ -1,31 +1,39 @@
 #!/usr/bin/env bash
-# Launch the Hermes front end full-screen in a kiosk browser on the Steam Deck.
+# Launch the Hermes front end in a browser on the Steam Deck.
 #
-# Add this script as a non-Steam game so it opens in Gaming Mode with Steam
-# Input controller support. See add-non-steam-shortcut.md.
+# By default this opens a normal MAXIMIZED window (with a close button and an
+# in-app Quit button) so you can always get out — even without a keyboard.
+# Set KIOSK=1 for true fullscreen kiosk; only do that in Gaming Mode, where the
+# STEAM button -> Exit Game always works.
+#
+# Add this script as a non-Steam game to launch it from Gaming Mode. See
+# add-non-steam-shortcut.md.
 #
 # Usage:
-#   ./launch-kiosk.sh                 # serves the built ./dist and opens it
-#   URL=http://127.0.0.1:4173 ./launch-kiosk.sh   # open an already-running URL
+#   ./launch-kiosk.sh                 # serve ./dist and open a maximized window
+#   KIOSK=1 ./launch-kiosk.sh         # fullscreen kiosk (Gaming Mode)
+#   URL=http://host:1234 ./launch-kiosk.sh   # open an already-running URL
 #
 # Environment:
-#   URL    Front-end URL to open. If unset, a static server is started for ./dist.
+#   URL    Front-end URL to open. If unset, ./dist is served locally.
 #   PORT   Port for the built-in static server (default 4173).
+#   KIOSK  Set to 1 for fullscreen kiosk instead of a maximized window.
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${PORT:-4173}"
 URL="${URL:-http://127.0.0.1:${PORT}}"
 
-# If no external URL was given, serve the production build locally.
+# If pointing at the local default, serve the production build ourselves using
+# the small control server (it powers the in-app Quit button via /__exit__).
 SERVER_PID=""
-if [ -z "${URL_EXTERNAL:-}" ] && [[ "$URL" == "http://127.0.0.1:${PORT}" ]]; then
+if [[ "$URL" == "http://127.0.0.1:${PORT}" ]]; then
   if [ ! -d "$ROOT/dist" ]; then
-    echo "No build found. Run 'npm run build' first." >&2
+    echo "No build found at $ROOT/dist. Use the prebuilt bundle or run 'npm run build'." >&2
     exit 1
   fi
   echo "Serving $ROOT/dist on :$PORT"
-  ( cd "$ROOT/dist" && python3 -m http.server "$PORT" --bind 127.0.0.1 ) &
+  PORT="$PORT" SERVE_DIR="$ROOT/dist" python3 "$ROOT/deck/serve.py" &
   SERVER_PID=$!
   trap '[ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true' EXIT
   sleep 1
@@ -34,20 +42,22 @@ fi
 # Find a Chromium-class browser. SteamOS ships Flatpak Chrome/Chromium commonly.
 launch_browser() {
   local url="$1"
-  # A dedicated profile dir forces a NEW browser instance that honors --kiosk/
-  # --app. Without it, an already-running Chrome just opens the URL as a tab in
-  # the existing session ("Opening in existing browser session") and ignores the
-  # kiosk flags. The path is stable so your in-app settings persist.
+  # A dedicated profile dir forces a NEW browser instance that honors our window
+  # flags. Without it, an already-running Chrome would just open the URL as a tab
+  # in the existing session and ignore them. The path is stable so the app's
+  # settings persist between launches.
   local profile="${HERMES_KIOSK_PROFILE:-$HOME/.hermes-kiosk}"
+  local mode=(--start-maximized)
+  [ "${KIOSK:-0}" = "1" ] && mode=(--kiosk --start-fullscreen)
   local args=(
     --user-data-dir="$profile"
-    --kiosk --start-fullscreen --no-first-run --noerrdialogs
+    --no-first-run --noerrdialogs
     --disable-pinch --overscroll-history-navigation=0
     --autoplay-policy=no-user-gesture-required
+    "${mode[@]}"
     "--app=${url}"
   )
-  # Run in the foreground (no `exec`) so the EXIT trap still fires and stops the
-  # static server we may have started — otherwise port 4173 stays occupied.
+  # Foreground (no `exec`) so the EXIT trap fires and stops the static server.
   if command -v flatpak >/dev/null && flatpak info com.google.Chrome >/dev/null 2>&1; then
     flatpak run com.google.Chrome "${args[@]}"
   elif command -v flatpak >/dev/null && flatpak info org.chromium.Chromium >/dev/null 2>&1; then
@@ -57,10 +67,10 @@ launch_browser() {
   elif command -v chromium >/dev/null; then
     chromium "${args[@]}"
   else
-    echo "No Chromium/Chrome found. Install via Discover (flatpak) first." >&2
+    echo "No Chromium/Chrome found. Install Chrome via Discover (flatpak) first." >&2
     exit 1
   fi
 }
 
-echo "Opening $URL"
+echo "Opening $URL ${KIOSK:+(kiosk) }— close with the in-app Quit button, the window's X, or Alt+F4"
 launch_browser "$URL"

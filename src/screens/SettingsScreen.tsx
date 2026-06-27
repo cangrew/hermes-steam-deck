@@ -1,4 +1,5 @@
 import { FocusableButton, FocusableField, FocusSection } from "../input/focusables";
+import { quitApp } from "../lib/quit";
 import { useStore } from "../state/store";
 
 export function SettingsScreen() {
@@ -76,6 +77,17 @@ export function SettingsScreen() {
         Research Hermes Agent. Navigate with the D-pad/stick, A to select, B to go back, X
         for the keyboard, LB/RB to switch tabs.
       </p>
+
+      <h2>Quit</h2>
+      <p className="muted">
+        Closes the app (and the local server when launched on the Deck). In Gaming Mode you
+        can also use the STEAM button → Exit Game.
+      </p>
+      <FocusSection className="form" focusKey="settings-quit">
+        <FocusableButton className="danger-btn" onPress={() => void quitApp()}>
+          ⏻ Quit Hermes
+        </FocusableButton>
+      </FocusSection>
     </div>
   );
 }

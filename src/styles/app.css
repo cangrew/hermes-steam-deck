@@ -149,6 +149,33 @@ code {
 .dot-error {
   background: var(--danger);
 }
+.quit {
+  flex: none;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 17px;
+  cursor: pointer;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.quit-armed {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+  font-size: 14px;
+}
+.danger-btn {
+  align-self: flex-start;
+  background: #2a1414;
+  border: 1px solid #5a2a2a;
+  color: #ffb4b2;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
 
 /* ---------- Hints bar ---------- */
 .hints {
