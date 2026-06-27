@@ -40,14 +40,16 @@ launch_browser() {
     --autoplay-policy=no-user-gesture-required
     "--app=${url}"
   )
+  # Run in the foreground (no `exec`) so the EXIT trap still fires and stops the
+  # static server we may have started — otherwise port 4173 stays occupied.
   if command -v flatpak >/dev/null && flatpak info com.google.Chrome >/dev/null 2>&1; then
-    exec flatpak run com.google.Chrome "${args[@]}"
+    flatpak run com.google.Chrome "${args[@]}"
   elif command -v flatpak >/dev/null && flatpak info org.chromium.Chromium >/dev/null 2>&1; then
-    exec flatpak run org.chromium.Chromium "${args[@]}"
+    flatpak run org.chromium.Chromium "${args[@]}"
   elif command -v google-chrome-stable >/dev/null; then
-    exec google-chrome-stable "${args[@]}"
+    google-chrome-stable "${args[@]}"
   elif command -v chromium >/dev/null; then
-    exec chromium "${args[@]}"
+    chromium "${args[@]}"
   else
     echo "No Chromium/Chrome found. Install via Discover (flatpak) first." >&2
     exit 1

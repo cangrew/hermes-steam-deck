@@ -241,6 +241,8 @@ export const useStore = create<AppState>((set, get) => {
       try {
         for await (const evt of client.run(trimmed, {
           sessionId,
+          model: get().settings.model || undefined,
+          images,
           signal: activeController.signal,
           onRunId: (runId) => set({ currentRunId: runId }),
         })) {

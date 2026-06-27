@@ -24,6 +24,10 @@ export class HermesApiError extends Error {
 export interface RunOptions {
   sessionId?: string;
   instructions?: string;
+  /** Model to run with; falls back to the server default when empty. */
+  model?: string;
+  /** Data URLs (data:image/...) to attach as inline image input. */
+  images?: string[];
   signal?: AbortSignal;
   /** Called as soon as the run id is known, so the UI can wire up Stop. */
   onRunId?: (runId: string) => void;
@@ -185,12 +189,23 @@ export class HermesClient {
    * API so we get tool progress, interrupt (stopRun) and human approval gates.
    */
   async *run(input: string, opts: RunOptions = {}): AsyncGenerator<StreamEvent> {
+    // When images are attached, send OpenAI-style content parts (the documented
+    // inline image format) instead of a bare string; otherwise keep the simple
+    // string input. Empty model/session/instructions are dropped by JSON.
+    const hasImages = !!opts.images && opts.images.length > 0;
+    const payloadInput = hasImages
+      ? [
+          { type: "text", text: input },
+          ...opts.images!.map((url) => ({ type: "image_url", image_url: { url } })),
+        ]
+      : input;
     const created = await this.request<{ run_id?: string; id?: string }>("/v1/runs", {
       method: "POST",
       body: JSON.stringify({
-        input,
+        input: payloadInput,
         session_id: opts.sessionId,
         instructions: opts.instructions,
+        model: opts.model || undefined,
       }),
       signal: opts.signal,
     });

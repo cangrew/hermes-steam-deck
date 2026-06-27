@@ -169,7 +169,17 @@ const server = createServer(async (req, res) => {
   // Runs
   if (p === "/v1/runs" && m === "POST") {
     const body = await readBody(req);
-    const run = { id: randomUUID(), input: String(body.input ?? ""), stopped: false };
+    // `input` may be a plain string or OpenAI-style content parts (with images).
+    const text = Array.isArray(body.input)
+      ? body.input
+          .filter((part) => part?.type === "text")
+          .map((part) => part.text)
+          .join(" ")
+      : String(body.input ?? "");
+    const imageCount = Array.isArray(body.input)
+      ? body.input.filter((part) => part?.type === "image_url").length
+      : 0;
+    const run = { id: randomUUID(), input: text, model: body.model, imageCount, stopped: false };
     runs.set(run.id, run);
     // persist a couple of messages on the session for history
     const s = body.session_id && sessions.get(body.session_id);

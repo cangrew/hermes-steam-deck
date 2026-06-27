@@ -62,6 +62,47 @@ describe("HermesClient", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("includes the selected model and inline images in the run body", async () => {
+    let runBody: Record<string, unknown> = {};
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const url = String(input);
+      if (url.endsWith("/v1/runs")) {
+        runBody = JSON.parse(String(init?.body));
+        return Promise.resolve(new Response(JSON.stringify({ run_id: "r1" }), { status: 200 }));
+      }
+      return Promise.resolve(sseResponse("event: response.completed\ndata: {}\n\n"));
+    });
+
+    const img = "data:image/png;base64,AAAA";
+    for await (const _ of client.run("look", { model: "Hermes-4-405B", images: [img] })) {
+      /* drain */
+    }
+
+    expect(runBody.model).toBe("Hermes-4-405B");
+    expect(Array.isArray(runBody.input)).toBe(true);
+    expect(runBody.input).toEqual([
+      { type: "text", text: "look" },
+      { type: "image_url", image_url: { url: img } },
+    ]);
+  });
+
+  it("sends a plain string input and omits model when none is set", async () => {
+    let runBody: Record<string, unknown> = {};
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const url = String(input);
+      if (url.endsWith("/v1/runs")) {
+        runBody = JSON.parse(String(init?.body));
+        return Promise.resolve(new Response(JSON.stringify({ run_id: "r1" }), { status: 200 }));
+      }
+      return Promise.resolve(sseResponse("event: response.completed\ndata: {}\n\n"));
+    });
+    for await (const _ of client.run("hi")) {
+      /* drain */
+    }
+    expect(runBody.input).toBe("hi");
+    expect("model" in runBody).toBe(false);
+  });
+
   it("surfaces a friendly error when the server is unreachable", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("ECONNREFUSED"));
     await expect(client.health()).rejects.toThrow(/Could not reach/);
