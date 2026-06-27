@@ -82,6 +82,25 @@ The API key and connection settings are stored locally in the browser.
 
 ## Run on the Steam Deck
 
+### Quick install (prebuilt, recommended)
+
+In **Desktop Mode**, open Konsole and run:
+
+```bash
+curl -fsSL https://github.com/cangrew/hermes-steam-deck/raw/release/install.sh | bash
+```
+
+This downloads the latest prebuilt bundle to `~/Applications/hermes-deck`, adds a
+**Hermes (Steam Deck)** entry to your app menu, and prints how to add it to Steam
+for Gaming Mode. Launch it from the menu or
+`~/Applications/hermes-deck/deck/launch-kiosk.sh`. Uninstall with
+`~/Applications/hermes-deck/install.sh --uninstall`.
+
+The app opens a normal closeable window; close it with the window's **X**, the
+in-app **⏻ Quit** button (top-right / Settings), or **Alt+F4**.
+
+### From source
+
 Build it and add it as a non-Steam game so it launches in Gaming Mode with
 controller support. Full walkthrough: [`deck/add-non-steam-shortcut.md`](deck/add-non-steam-shortcut.md)
 and the recommended controller mapping in [`deck/steam-input-layout.md`](deck/steam-input-layout.md).
@@ -89,7 +108,7 @@ and the recommended controller mapping in [`deck/steam-input-layout.md`](deck/st
 ```bash
 npm run build
 chmod +x deck/launch-kiosk.sh
-./deck/launch-kiosk.sh        # serves ./dist and opens it full-screen
+./deck/launch-kiosk.sh        # serves ./dist and opens a window (KIOSK=1 for fullscreen)
 ```
 
 ## How it connects (API surface used)
