@@ -36,9 +36,11 @@ chmod +x deck/launch-kiosk.sh
 ## 5. Apply the controller layout
 
 Launch the shortcut once in **Gaming Mode**, press the **Steam** button →
-**Controller Settings**, and apply the mapping in [`steam-input-layout.md`](./steam-input-layout.md).
-This makes the D-pad/stick move focus, A select, B back, etc. — and provides
-keyboard fallbacks so the UI is fully usable even before any gamepad polling.
+**Controller Settings**, and pick the official **"Gamepad with Mouse Trackpad"**
+template (the default usually works out of the box). Steam Input then presents
+the controls as a standard gamepad that the app reads directly: D-pad/stick move
+focus, A selects, B goes back, etc. See [`steam-input-layout.md`](./steam-input-layout.md)
+for the full mapping and a keyboard + mouse fallback layout.
 
 ## 6. Connect to your agent
 
@@ -55,13 +57,23 @@ The default is `http://127.0.0.1:8642` for Hermes running on the Deck itself.
 
 ## Troubleshooting
 
-- **Only the touchscreen works — sticks/buttons/trackpad do nothing:** the
-  shortcut is using the default **"Gamepad" controller template**, which the
-  browser can't read under Gamescope (and turns the trackpads into sticks, so
-  there's no mouse). Fix it: Steam button → **Controller Settings** → switch to a
-  **keyboard + mouse** layout (see [`steam-input-layout.md`](./steam-input-layout.md)):
-  right trackpad → Mouse, R2 → Left Click, D-pad → Arrow keys, A → Enter,
-  B → Escape. After that the cursor and focus navigation both work.
+- **Only the touchscreen works — sticks/buttons/trackpad do nothing:** work
+  through these in order:
+  1. **Press any button once.** The browser hides gamepads until the first
+     press, so a freshly launched app sees nothing.
+  2. Open **Settings → Input diagnostics** in the app. If **no gamepad is
+     listed**, the browser sandbox can't enumerate devices — make sure you're
+     launching through the current `launch-kiosk.sh` (it passes
+     `--filesystem=/run/udev:ro` to the flatpak browser; re-run `install.sh` or
+     pull the latest script). If you launch the browser some other way, grant
+     the permission persistently:
+     `flatpak --user override --filesystem=/run/udev:ro com.google.Chrome`.
+  3. Make sure the Hermes window is focused and the Steam overlay is closed —
+     the browser only receives gamepad input while its window has focus.
+  4. Still stuck? Switch to a **keyboard + mouse** layout (see
+     [`steam-input-layout.md`](./steam-input-layout.md)): right trackpad →
+     Mouse, R2 → Left Click, D-pad → Arrow keys, A → Enter, B → Escape. The app
+     fully supports that path too.
 - **"Opening in existing browser session" / no fullscreen window:** Chrome was
   already running, so it opened the app as a tab in that window. The launcher
   now starts a dedicated browser instance (`--user-data-dir`) to avoid this. If

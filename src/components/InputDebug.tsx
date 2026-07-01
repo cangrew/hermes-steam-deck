@@ -1,12 +1,22 @@
 import { useEffect, useRef, useState } from "react";
+import { pickGamepad } from "../input/useGamepad";
+
+interface PadInfo {
+  index: number;
+  id: string;
+  mapping: string;
+  connected: boolean;
+  active: boolean;
+}
 
 /**
- * Live input readout for diagnosing controller issues on the Steam Deck:
- * whether the browser's Gamepad API sees a pad, the last gamepad button index,
- * and the last keyboard key (Steam Input can map controls to either).
+ * Live input readout for diagnosing controller issues on the Steam Deck: every
+ * pad the browser's Gamepad API sees (with mapping and which one the app uses),
+ * the last gamepad button index, and the last keyboard key (Steam Input can map
+ * controls to either).
  */
 export function InputDebug() {
-  const [pad, setPad] = useState<string | null>(null);
+  const [pads, setPads] = useState<PadInfo[]>([]);
   const [lastButton, setLastButton] = useState("—");
   const [lastKey, setLastKey] = useState("—");
   const raf = useRef(0);
@@ -16,15 +26,28 @@ export function InputDebug() {
     window.addEventListener("keydown", onKey);
 
     const prev = new Map<number, boolean>();
+    let lastSnapshot = "";
     const loop = () => {
       raf.current = requestAnimationFrame(loop);
-      const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-      const p = Array.from(pads).find((x): x is Gamepad => x != null) ?? null;
-      // setState with the same primitive is a no-op in React, so this won't
-      // re-render every frame unless something actually changed.
-      setPad(p ? p.id : null);
-      if (p) {
-        p.buttons.forEach((b, i) => {
+      const raw = navigator.getGamepads ? navigator.getGamepads() : [];
+      const active = pickGamepad(raw);
+      const infos: PadInfo[] = Array.from(raw)
+        .filter((p): p is Gamepad => p != null)
+        .map((p) => ({
+          index: p.index,
+          id: p.id,
+          mapping: p.mapping,
+          connected: p.connected,
+          active: p === active,
+        }));
+      // Array state re-renders every frame unless we explicitly diff it.
+      const snapshot = JSON.stringify(infos);
+      if (snapshot !== lastSnapshot) {
+        lastSnapshot = snapshot;
+        setPads(infos);
+      }
+      if (active) {
+        active.buttons.forEach((b, i) => {
           const was = prev.get(i) ?? false;
           if (b.pressed && !was) setLastButton(`button ${i}`);
           prev.set(i, b.pressed);
@@ -42,9 +65,16 @@ export function InputDebug() {
   return (
     <div className="diag">
       <div>
-        Gamepad detected:{" "}
-        <b className={pad ? "ok" : "bad"}>{pad ?? "no"}</b>
+        Gamepads detected:{" "}
+        <b className={pads.length > 0 ? "ok" : "bad"}>{pads.length || "none"}</b>
       </div>
+      {pads.map((p) => (
+        <div key={p.index}>
+          #{p.index} — <b>{p.id}</b> — mapping: {p.mapping || "(none)"} —{" "}
+          {p.connected ? "connected" : "disconnected"}
+          {p.active ? " — (active)" : ""}
+        </div>
+      ))}
       <div>
         Last gamepad button: <b>{lastButton}</b>
       </div>
@@ -52,9 +82,13 @@ export function InputDebug() {
         Last key received: <b>{lastKey}</b>
       </div>
       <p className="muted">
-        Press buttons / D-pad and watch this. If "Gamepad detected" stays "no" but
-        keys appear, your Steam layout is sending keyboard input (good — the app
-        uses it). If neither changes, the controller isn't reaching the browser.
+        Press buttons / D-pad and watch this. A pad with mapping "standard" means
+        the Gamepad API path works. If no pad ever appears, press any button once
+        (the browser hides pads until the first press); if it still shows none in
+        Gaming Mode, the browser sandbox is missing udev access — launch through
+        the updated launch-kiosk.sh (or re-run install.sh). Keys appearing instead
+        of buttons means your Steam layout sends keyboard input, which the app
+        also fully supports.
       </p>
     </div>
   );
