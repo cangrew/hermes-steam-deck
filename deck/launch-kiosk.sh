@@ -58,11 +58,17 @@ launch_browser() {
     "--app=${url}"
   )
   # Foreground (no `exec`) so the EXIT trap fires and stops the static server.
-  # --device=all lets the sandboxed browser read input devices (gamepad API).
+  # Flatpak sandbox holes needed for the browser Gamepad API:
+  #   --device=all              access to the /dev/input device nodes
+  #   --filesystem=/run/udev:ro Chromium enumerates gamepads via the udev
+  #                             database; without it the browser sees no pads at
+  #                             all — this is why Steam Input's virtual X360 pad
+  #                             was invisible in Gaming Mode.
+  local fp_args=(--device=all --filesystem=/run/udev:ro)
   if command -v flatpak >/dev/null && flatpak info com.google.Chrome >/dev/null 2>&1; then
-    flatpak run --device=all com.google.Chrome "${args[@]}"
+    flatpak run "${fp_args[@]}" com.google.Chrome "${args[@]}"
   elif command -v flatpak >/dev/null && flatpak info org.chromium.Chromium >/dev/null 2>&1; then
-    flatpak run --device=all org.chromium.Chromium "${args[@]}"
+    flatpak run "${fp_args[@]}" org.chromium.Chromium "${args[@]}"
   elif command -v google-chrome-stable >/dev/null; then
     google-chrome-stable "${args[@]}"
   elif command -v chromium >/dev/null; then

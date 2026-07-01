@@ -1,15 +1,39 @@
 # Recommended Steam Input layout
 
-**Important:** on the Steam Deck, the most reliable way to drive a web app is a
-**keyboard + mouse** controller layout — *not* the default "Gamepad" template.
-Under Gamescope the emulated gamepad usually isn't visible to the browser, so the
-app sees nothing from the controller and only the touchscreen works. Mapping the
-controls to keyboard keys and a mouse fixes that.
+**Use the official "Gamepad with Mouse Trackpad" template.** In Gaming Mode,
+Steam Input presents the Deck's controls to the app as a standard Xbox 360
+gamepad, and the launcher gives the browser the sandbox access it needs to read
+it (`--device=all` plus `--filesystem=/run/udev:ro` — Chromium enumerates
+gamepads through udev). The buttons and sticks drive the app directly through
+the Gamepad API; the right trackpad stays a mouse so you can also tap anything.
 
 Configure this under **Steam button → Controller Settings** for the Hermes
-shortcut (or the game's gear icon → **Controller Layout** in Gaming Mode).
+shortcut (or the game's gear icon → **Controller Layout** in Gaming Mode). The
+default template usually works out of the box.
 
-## Recommended mapping (keyboard + mouse)
+## What the controls do in the app
+
+| Control            | Does in app                     |
+| ------------------ | ------------------------------- |
+| D-pad / Left stick | Move focus                      |
+| A                  | Select / activate               |
+| B                  | Back / cancel / close keyboard  |
+| X                  | Open the on-screen keyboard     |
+| Y                  | Context menu / secondary action |
+| L1 / R1            | Previous / next tab             |
+| L2 / R2            | Scroll                          |
+| Start              | Open Settings                   |
+| Right trackpad     | Mouse cursor (tap = click)      |
+
+Note: the browser hides gamepads until the **first button press** — if nothing
+reacts right away, press any button once. You can verify what the app sees under
+**Settings → Input diagnostics**.
+
+## Fallback: keyboard + mouse layout
+
+If the gamepad still isn't detected (check the diagnostics panel first), a
+keyboard + mouse layout drives the whole app too — it navigates by focus, and
+Steam Input's synthetic key events are always visible to the browser:
 
 | Control            | Bind to                | Does in app                  |
 | ------------------ | ---------------------- | ---------------------------- |
@@ -27,17 +51,7 @@ shortcut (or the game's gear icon → **Controller Layout** in Gaming Mode).
 
 The quickest path: in the layout editor, start from the **"Web Browser"** or
 **"Keyboard (WASD) Mouse"** template, then set **D-pad → Arrow keys**, **A →
-Enter**, **B → Escape**. That alone makes the whole UI usable. Add the trackpad
-mouse + R2 click for point-and-tap.
-
-## Why keyboard + mouse, not gamepad
-
-- The app navigates by **focus**: Arrow keys move the highlight, Enter activates.
-  Steam Input emits real key events that the app reads reliably.
-- The **right trackpad as mouse** lets you click any control directly, exactly
-  like the touchscreen.
-- The raw browser Gamepad API is unreliable under SteamOS/Gamescope (and the
-  flatpak browser may not see the device), so we don't depend on it.
+Enter**, **B → Escape**.
 
 The app always keeps something focused, and the bottom hint bar shows the
 current actions. If nothing highlights at first, tap the screen once or move the

@@ -45,6 +45,17 @@ const FIRST_REPEAT_MS = 380;
 const REPEAT_MS = 110;
 
 /**
+ * Pick the pad to drive the app: prefer a connected standard-mapping pad (what
+ * Steam Input's virtual X360 gamepad reports), fall back to the first connected
+ * pad. Game Mode can expose several entries (virtual pad, raw "Steam Deck"
+ * device, phantom slots), and a non-standard pad would break the button map.
+ */
+export function pickGamepad(pads: readonly (Gamepad | null)[]): Gamepad | null {
+  const live = Array.from(pads).filter((p): p is Gamepad => p != null && p.connected);
+  return live.find((p) => p.mapping === "standard") ?? live[0] ?? null;
+}
+
+/**
  * Polls the Gamepad API each animation frame and translates the Steam Deck's
  * physical controls into spatial-navigation moves and app actions. Direction
  * presses auto-repeat when held. Falls back silently when no gamepad is
@@ -59,6 +70,7 @@ export function useGamepad(handlers: GamepadHandlers) {
 
     let raf = 0;
     const prevButtons = new Map<number, boolean>();
+    let padIndex = -1;
     let dir: "up" | "down" | "left" | "right" | null = null;
     let nextDirAt = 0;
 
@@ -71,8 +83,16 @@ export function useGamepad(handlers: GamepadHandlers) {
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       const pads = navigator.getGamepads();
-      const pad = Array.from(pads).find((p): p is Gamepad => p != null);
+      const pad = pickGamepad(pads);
       if (!pad) return;
+      // If the selected pad changed (Steam Input reconnecting, a better-mapped
+      // pad appearing), drop edge/repeat state so it can't swallow or fabricate
+      // presses on the new device.
+      if (pad.index !== padIndex) {
+        padIndex = pad.index;
+        prevButtons.clear();
+        dir = null;
+      }
       const h = ref.current;
 
       const pressed = (i: number) => !!pad.buttons[i]?.pressed;

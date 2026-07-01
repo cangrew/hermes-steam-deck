@@ -102,8 +102,10 @@ in-app **⏻ Quit** button (top-right / Settings), or **Alt+F4**.
 ### From source
 
 Build it and add it as a non-Steam game so it launches in Gaming Mode with
-controller support. Full walkthrough: [`deck/add-non-steam-shortcut.md`](deck/add-non-steam-shortcut.md)
-and the recommended controller mapping in [`deck/steam-input-layout.md`](deck/steam-input-layout.md).
+controller support — the standard Steam Input **Gamepad** template works out of
+the box. Full walkthrough: [`deck/add-non-steam-shortcut.md`](deck/add-non-steam-shortcut.md);
+controller notes (and a keyboard+mouse fallback layout) in
+[`deck/steam-input-layout.md`](deck/steam-input-layout.md).
 
 ```bash
 npm run build
