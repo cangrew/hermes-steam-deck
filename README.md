@@ -1,19 +1,23 @@
-# Hermes for Steam Deck — v0.1.4 (prebuilt)
+# Hermes for Steam Deck — v0.1.5 (prebuilt)
 
 Ready-to-run build — no Node, no `npm install`, no compiling. You only need a
 Chromium-class browser and Python 3 (both easy on SteamOS).
 
-## What's new in v0.1.4
+## What's new in v0.1.5
 
-- Controller/keyboard navigation fixed: the app now always keeps a focus
-  cursor, so the D-pad/arrows work immediately; `[`/`]` switch tabs,
-  PageUp/PageDown scroll.
-- New **Input diagnostics** panel in Settings to see what the Deck's
-  controls send to the app.
-- Launcher grants the browser device access (`--device=all`) so the
-  gamepad API can read the controller.
-- If buttons still don't navigate, set a keyboard+mouse controller layout
-  (see deck/steam-input-layout.md).
+- **Gaming Mode controller input fixed.** The launcher now grants the flatpak
+  browser udev access (`--filesystem=/run/udev:ro`), which is what Chromium
+  needs to see Steam Input's virtual gamepad. The standard **"Gamepad with
+  Mouse Trackpad"** controller template now works out of the box — no custom
+  keyboard layout required.
+- Smarter gamepad selection: the app prefers the standard-mapping pad (Steam
+  Input's virtual Xbox 360 pad) over phantom or raw devices.
+- The **Input diagnostics** panel (Settings) now lists every gamepad the
+  browser sees — id, mapping, and which one the app uses.
+- Docs updated: gamepad template is the primary layout; keyboard+mouse remains
+  a documented fallback (see deck/steam-input-layout.md).
+- Tip: the browser hides gamepads until the **first button press** — press any
+  button once if nothing reacts right after launch.
 
 ## Easiest install (one-liner)
 
@@ -30,8 +34,8 @@ entry, and prints how to add it to Steam. Uninstall:
 ## Or install from this archive (offline)
 
 ```bash
-tar xzf hermes-deck-v0.1.4.tar.gz
-cd hermes-deck-v0.1.4
+tar xzf hermes-deck-v0.1.5.tar.gz
+cd hermes-deck-v0.1.5
 ./install.sh                 # installs + creates the menu entry
 # …or just run it in place:
 chmod +x deck/launch-kiosk.sh && ./deck/launch-kiosk.sh
