@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { navigateByDirection } from "@noriginmedia/norigin-spatial-navigation";
+import { currentCapture } from "./gamepadCapture";
 
 export interface GamepadHandlers {
   /** B button — contextual back / cancel. */
@@ -18,13 +19,11 @@ export interface GamepadHandlers {
   onScroll?: (direction: "up" | "down") => void;
   /** Ensure something is focused before navigating (anchors the focus cursor). */
   ensureFocus?: () => void;
-  /** When true, directional input is suppressed (e.g. an OSK owns the d-pad). */
-  capture?: boolean;
 }
 
 // Standard gamepad mapping (Xbox-like), which Gamescope/Steam Input present to
 // the browser for the Steam Deck's built-in controls.
-const BTN = {
+export const BTN = {
   A: 0,
   B: 1,
   X: 2,
@@ -33,7 +32,10 @@ const BTN = {
   RB: 5,
   LT: 6,
   RT: 7,
+  SELECT: 8,
   START: 9,
+  L3: 10,
+  R3: 11,
   DPAD_UP: 12,
   DPAD_DOWN: 13,
   DPAD_LEFT: 14,
@@ -43,6 +45,9 @@ const BTN = {
 const DEADZONE = 0.4;
 const FIRST_REPEAT_MS = 380;
 const REPEAT_MS = 110;
+
+// Analog triggers report `value` without always flipping `pressed`.
+const ANALOG_THRESHOLD = 0.6;
 
 /**
  * Pick the pad to drive the app: prefer a connected standard-mapping pad (what
@@ -60,6 +65,9 @@ export function pickGamepad(pads: readonly (Gamepad | null)[]): Gamepad | null {
  * physical controls into spatial-navigation moves and app actions. Direction
  * presses auto-repeat when held. Falls back silently when no gamepad is
  * present (mouse/touch/keyboard still work).
+ *
+ * When a capture handler is registered (see gamepadCapture.ts), the raw frame
+ * goes to that handler instead and none of the default actions fire.
  */
 export function useGamepad(handlers: GamepadHandlers) {
   const ref = useRef(handlers);
@@ -74,17 +82,15 @@ export function useGamepad(handlers: GamepadHandlers) {
     let dir: "up" | "down" | "left" | "right" | null = null;
     let nextDirAt = 0;
 
-    const edge = (index: number, pressed: boolean): boolean => {
-      const was = prevButtons.get(index) ?? false;
-      prevButtons.set(index, pressed);
-      return pressed && !was;
-    };
-
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       const pads = navigator.getGamepads();
       const pad = pickGamepad(pads);
-      if (!pad) return;
+      const cap = currentCapture();
+      if (!pad) {
+        cap?.(null);
+        return;
+      }
       // If the selected pad changed (Steam Input reconnecting, a better-mapped
       // pad appearing), drop edge/repeat state so it can't swallow or fabricate
       // presses on the new device.
@@ -95,24 +101,41 @@ export function useGamepad(handlers: GamepadHandlers) {
       }
       const h = ref.current;
 
-      const pressed = (i: number) => !!pad.buttons[i]?.pressed;
+      // Edge state is tracked every frame — even under capture — so a press
+      // held across a capture handoff is neither swallowed nor re-fired.
+      const held: boolean[] = [];
+      const edges: boolean[] = [];
+      for (let i = 0; i < pad.buttons.length; i++) {
+        const b = pad.buttons[i];
+        const p = !!b && (b.pressed || (b.value ?? 0) > ANALOG_THRESHOLD);
+        held[i] = p;
+        edges[i] = p && !(prevButtons.get(i) ?? false);
+        prevButtons.set(i, p);
+      }
+      const pressed = (i: number) => !!held[i];
+      const edge = (i: number) => !!edges[i];
+
+      if (cap) {
+        cap({ now, lx: pad.axes[0] ?? 0, ly: pad.axes[1] ?? 0, pressed, edge });
+        // Reset repeat state so releasing capture starts direction input fresh.
+        dir = null;
+        return;
+      }
 
       // --- Action buttons (edge-triggered) ---
-      if (edge(BTN.A, pressed(BTN.A))) {
+      if (edge(BTN.A)) {
         h.ensureFocus?.();
         const el = document.activeElement as HTMLElement | null;
         el?.click?.();
       }
-      if (edge(BTN.B, pressed(BTN.B))) h.onBack?.();
-      if (edge(BTN.X, pressed(BTN.X))) h.onToggleKeyboard?.();
-      if (edge(BTN.Y, pressed(BTN.Y))) h.onMenu?.();
-      if (edge(BTN.LB, pressed(BTN.LB))) h.onPrevScreen?.();
-      if (edge(BTN.RB, pressed(BTN.RB))) h.onNextScreen?.();
-      if (edge(BTN.START, pressed(BTN.START))) h.onStart?.();
-      if (edge(BTN.LT, pressed(BTN.LT) || (pad.buttons[BTN.LT]?.value ?? 0) > 0.6))
-        h.onScroll?.("up");
-      if (edge(BTN.RT, pressed(BTN.RT) || (pad.buttons[BTN.RT]?.value ?? 0) > 0.6))
-        h.onScroll?.("down");
+      if (edge(BTN.B)) h.onBack?.();
+      if (edge(BTN.X)) h.onToggleKeyboard?.();
+      if (edge(BTN.Y)) h.onMenu?.();
+      if (edge(BTN.LB)) h.onPrevScreen?.();
+      if (edge(BTN.RB)) h.onNextScreen?.();
+      if (edge(BTN.START)) h.onStart?.();
+      if (edge(BTN.LT)) h.onScroll?.("up");
+      if (edge(BTN.RT)) h.onScroll?.("down");
 
       // --- Direction (d-pad + left stick), with auto-repeat ---
       const ax = pad.axes[0] ?? 0;
@@ -126,13 +149,13 @@ export function useGamepad(handlers: GamepadHandlers) {
       if (nextDir !== dir) {
         dir = nextDir;
         nextDirAt = now + (nextDir ? FIRST_REPEAT_MS : 0);
-        if (nextDir && !h.capture) {
+        if (nextDir) {
           h.ensureFocus?.();
           move(nextDir);
         }
       } else if (dir && now >= nextDirAt) {
         nextDirAt = now + REPEAT_MS;
-        if (!h.capture) move(dir);
+        move(dir);
       }
     };
 
