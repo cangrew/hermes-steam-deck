@@ -781,6 +781,106 @@ code {
   flex: 1.4;
 }
 
+/* ---------- Daisywheel keyboard ---------- */
+.wheel-body {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+.wheel-svg {
+  width: min(46vh, 380px);
+  height: min(46vh, 380px);
+  flex-shrink: 0;
+  touch-action: manipulation;
+}
+.wheel-wedge {
+  fill: var(--bg-3);
+  stroke: var(--line);
+  stroke-width: 1.5;
+  transition: fill 80ms linear;
+}
+.wheel-petal.active .wheel-wedge {
+  fill: var(--user);
+  stroke: var(--focus);
+  stroke-width: 2.5;
+}
+.wheel-char-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.wheel-char-text {
+  fill: var(--text);
+  font-size: 24px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.wheel-petal.active .wheel-char-text {
+  fill: #fff;
+}
+.wheel-hub {
+  fill: var(--bg-2);
+  stroke: var(--line);
+}
+.wheel-hub-hint {
+  fill: var(--muted);
+  font-size: 18px;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.wheel-badge {
+  cursor: pointer;
+}
+.wheel-slot-a {
+  fill: var(--ok);
+}
+.wheel-slot-b {
+  fill: var(--danger);
+}
+.wheel-slot-x {
+  fill: var(--accent);
+}
+.wheel-slot-y {
+  fill: var(--focus);
+}
+.wheel-badge-text {
+  fill: #0b0e14;
+  font-size: 17px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.wheel-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 190px;
+}
+.wheel-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wheel-hints .hint {
+  font-size: 13px;
+}
+.wheel-mode-toggle {
+  flex: none;
+  height: 44px;
+  font-size: 14px;
+  padding: 0 12px;
+}
+.wheel-strip .osk-key {
+  height: 48px;
+}
+.wheel-key-active {
+  border-color: var(--focus);
+  color: var(--focus);
+}
+
 .placeholder {
   color: var(--muted);
   opacity: 0.7;

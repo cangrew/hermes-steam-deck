@@ -5,7 +5,7 @@ import {
   shiftPressed,
   WHEEL_LAYERS,
 } from "./wheelLayout";
-import { ROWS_LOWER, ROWS_SYMBOLS } from "./OnScreenKeyboard";
+import { ROWS_LOWER, ROWS_SYMBOLS } from "./oskRows";
 
 const layerChars = (layer: readonly (readonly string[])[]) => layer.flat();
 
