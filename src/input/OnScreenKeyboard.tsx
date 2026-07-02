@@ -32,8 +32,18 @@ const FIRST_KEY = "osk-key-0-0";
  * Navigation is trapped inside the keyboard while it is open.
  */
 export function OnScreenKeyboard() {
-  const { open, value, label, multiline, insert, backspace, submit, close, setValue } =
-    useOsk();
+  const {
+    open,
+    value,
+    label,
+    multiline,
+    password,
+    insert,
+    backspace,
+    submit,
+    close,
+    setValue,
+  } = useOsk();
   const [layer, setLayer] = useState<Layer>("lower");
 
   const wasOpen = useRef(false);
@@ -69,7 +79,15 @@ export function OnScreenKeyboard() {
         <div className="osk-preview">
           <span className="osk-label">{label ?? "Input"}</span>
           <span className="osk-text">
-            {value || <span className="placeholder">type…</span>}
+            {value ? (
+              password ? (
+                "•".repeat(value.length)
+              ) : (
+                value
+              )
+            ) : (
+              <span className="placeholder">type…</span>
+            )}
             <span className="osk-caret" />
           </span>
         </div>

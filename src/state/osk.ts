@@ -4,6 +4,8 @@ export interface OpenKeyboardOptions {
   value: string;
   label?: string;
   multiline?: boolean;
+  /** Mask the value preview (API keys etc.). */
+  password?: boolean;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
   /** Restore spatial focus here when the keyboard closes. */
