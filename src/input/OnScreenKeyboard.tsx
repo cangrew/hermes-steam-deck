@@ -3,7 +3,7 @@ import { doesFocusableExist, setFocus } from "@noriginmedia/norigin-spatial-navi
 import { useOsk } from "../state/osk";
 import { FocusableButton, FocusSection } from "./focusables";
 
-const ROWS_LOWER = [
+export const ROWS_LOWER = [
   "1234567890".split(""),
   "qwertyuiop".split(""),
   "asdfghjkl".split(""),
@@ -15,7 +15,7 @@ const ROWS_UPPER = [
   "ASDFGHJKL".split(""),
   "ZXCVBNM".split(""),
 ];
-const ROWS_SYMBOLS = [
+export const ROWS_SYMBOLS = [
   "1234567890".split(""),
   "@#$_&-+()".split(""),
   "*\"':;!?/".split(""),
