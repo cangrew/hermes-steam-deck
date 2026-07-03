@@ -30,8 +30,14 @@ exactly that, while exposing the agent's capabilities rather than just plain cha
 - **Model switcher** (`/v1/models`), **Skills** and **Toolsets** browsers.
 - **Scheduled jobs** (natural-language cron): create, run now, pause/resume, delete.
 - **Steam Deck input layer**: spatial (D-pad/stick) focus navigation with a gold
-  focus ring, Gamepad API polling with auto-repeat, keyboard parity, a built-in
-  **on-screen keyboard**, large touch targets, and a control-hints bar.
+  focus ring, Gamepad API polling with auto-repeat, keyboard parity, a fast
+  **daisywheel keyboard** (with a grid keyboard as an alternative), word
+  prediction, large touch targets, and a control-hints bar.
+- **Fast controller typing** — the default text-entry surface is a *daisywheel*:
+  the left stick points at one of 8 petals of 4 characters and A/B/X/Y pick a
+  character positionally, so most characters cost two inputs with no cursor
+  traversal. A word-prediction bar completes common words from the D-pad. Prefer
+  the classic grid? Toggle to it in the keyboard (the choice is remembered).
 - **Configurable backend** — point it at Hermes running locally on the Deck
   (`http://127.0.0.1:8642`) or on a remote VPS/home server.
 
@@ -42,10 +48,18 @@ exactly that, while exposing the agent's capabilities rather than just plain cha
 | D-pad / Left stick | Move focus                     |
 | A                  | Select / activate              |
 | B                  | Back / cancel / close keyboard |
-| X                  | Open on-screen keyboard        |
+| X                  | Open the keyboard              |
 | L1 / R1            | Switch tab                     |
 | L2 / R2            | Scroll                         |
 | Touch / trackpad   | Tap anything directly          |
+
+While the **daisywheel** keyboard is open it owns the controller: aim a petal
+with the **left stick** and press **Y/X/B/A** for its top/left/right/bottom
+character; **RT** types a space, **LT** backspaces (hold to repeat), **LB** is
+shift (double-tap for caps lock), **RB** switches to symbols. The **D-pad**
+moves through word suggestions (up to accept). **Select** cancels and **Start**
+submits; **R3** inserts a newline in multi-line fields. Every petal is also
+tappable, and a hardware keyboard types straight in.
 
 ## Quick start (dev, no agent needed)
 
@@ -133,7 +147,7 @@ shapes across the chat-completions / responses / runs endpoints.
 ```
 src/api/        Typed Hermes client, tolerant SSE parser, types
 src/state/      Zustand store (settings, connection, chat turn loop) + OSK store
-src/input/      Spatial nav init, Gamepad polling, focusables, on-screen keyboard
+src/input/      Spatial nav init, Gamepad polling/capture, focusables, keyboards (daisywheel + grid), word prediction
 src/components/ Top bar, hints bar, chat (bubbles/composer), markdown
 src/screens/    Chat, History, Models, Skills, Toolsets, Jobs, Settings
 mock/           Stand-in Hermes API server for development/testing

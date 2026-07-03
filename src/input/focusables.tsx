@@ -127,7 +127,15 @@ export function FocusableField({
   });
 
   const open = () =>
-    openKeyboard({ value, label, multiline, onChange, onSubmit, returnFocusKey: focusKey });
+    openKeyboard({
+      value,
+      label,
+      multiline,
+      password,
+      onChange,
+      onSubmit,
+      returnFocusKey: focusKey,
+    });
 
   const display = password && value ? "•".repeat(value.length) : value;
 

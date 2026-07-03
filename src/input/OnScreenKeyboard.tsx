@@ -1,56 +1,47 @@
-import { useEffect, useRef, useState } from "react";
-import { doesFocusableExist, setFocus } from "@noriginmedia/norigin-spatial-navigation";
+import { useEffect, useState } from "react";
+import { setFocus } from "@noriginmedia/norigin-spatial-navigation";
 import { useOsk } from "../state/osk";
 import { FocusableButton, FocusSection } from "./focusables";
-
-const ROWS_LOWER = [
-  "1234567890".split(""),
-  "qwertyuiop".split(""),
-  "asdfghjkl".split(""),
-  "zxcvbnm".split(""),
-];
-const ROWS_UPPER = [
-  "1234567890".split(""),
-  "QWERTYUIOP".split(""),
-  "ASDFGHJKL".split(""),
-  "ZXCVBNM".split(""),
-];
-const ROWS_SYMBOLS = [
-  "1234567890".split(""),
-  "@#$_&-+()".split(""),
-  "*\"':;!?/".split(""),
-  ".,~`|•".split(""),
-];
+import { ROWS_LOWER, ROWS_SYMBOLS, ROWS_UPPER } from "./oskRows";
+import { SuggestionBar } from "./predict/SuggestionBar";
+import { acceptSuggestion } from "./predict/predict";
 
 type Layer = "lower" | "upper" | "symbols";
 
 const FIRST_KEY = "osk-key-0-0";
 
+export interface OnScreenKeyboardProps {
+  /** Switch to the daisywheel (preference persisted by the host). */
+  onSwitchMode?: () => void;
+}
+
 /**
- * The built-in on-screen keyboard overlay. Every key is a spatial-navigation
+ * The grid on-screen keyboard overlay. Every key is a spatial-navigation
  * focusable, so the d-pad/stick moves between keys and A/Enter presses them.
- * Navigation is trapped inside the keyboard while it is open.
+ * Navigation is trapped inside the keyboard while it is open. Focus restore
+ * on close is handled by the hosting TextInputOverlay.
  */
-export function OnScreenKeyboard() {
-  const { open, value, label, multiline, insert, backspace, submit, close, setValue } =
-    useOsk();
+export function OnScreenKeyboard({ onSwitchMode }: OnScreenKeyboardProps) {
+  const {
+    open,
+    value,
+    label,
+    multiline,
+    password,
+    insert,
+    backspace,
+    submit,
+    close,
+    setValue,
+  } = useOsk();
   const [layer, setLayer] = useState<Layer>("lower");
 
-  const wasOpen = useRef(false);
   useEffect(() => {
-    if (open) {
-      setLayer("lower");
-      // Focus the keyboard once it has mounted.
-      const t = setTimeout(() => setFocus(FIRST_KEY), 0);
-      wasOpen.current = true;
-      return () => clearTimeout(t);
-    }
-    // On close, return focus to the field that opened the keyboard.
-    if (wasOpen.current) {
-      wasOpen.current = false;
-      const rk = useOsk.getState().returnFocusKey;
-      if (rk && doesFocusableExist(rk)) setFocus(rk);
-    }
+    if (!open) return;
+    setLayer("lower");
+    // Focus the keyboard once it has mounted.
+    const t = setTimeout(() => setFocus(FIRST_KEY), 0);
+    return () => clearTimeout(t);
   }, [open]);
 
   if (!open) return null;
@@ -69,10 +60,25 @@ export function OnScreenKeyboard() {
         <div className="osk-preview">
           <span className="osk-label">{label ?? "Input"}</span>
           <span className="osk-text">
-            {value || <span className="placeholder">type…</span>}
+            {value ? (
+              password ? (
+                "•".repeat(value.length)
+              ) : (
+                value
+              )
+            ) : (
+              <span className="placeholder">type…</span>
+            )}
             <span className="osk-caret" />
           </span>
         </div>
+
+        <SuggestionBar
+          value={value}
+          password={password}
+          mode="grid"
+          onAccept={(s) => setValue(acceptSuggestion(value, s))}
+        />
 
         {rows.map((row, r) => (
           <div className="osk-row" key={r}>
@@ -119,6 +125,11 @@ export function OnScreenKeyboard() {
           <FocusableButton className="osk-key osk-clear" onPress={() => setValue("")}>
             Clear
           </FocusableButton>
+          {onSwitchMode && (
+            <FocusableButton className="osk-key osk-wide" onPress={onSwitchMode}>
+              ◎ Wheel
+            </FocusableButton>
+          )}
           <FocusableButton className="osk-key osk-cancel" onPress={close}>
             Cancel (B)
           </FocusableButton>

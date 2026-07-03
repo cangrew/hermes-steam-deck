@@ -8,7 +8,7 @@ import {
 import { TopBar, SCREEN_ORDER } from "./components/TopBar";
 import { ControllerHints } from "./components/ControllerHints";
 import { COMMON_HINTS } from "./components/hints";
-import { OnScreenKeyboard } from "./input/OnScreenKeyboard";
+import { TextInputOverlay } from "./input/TextInputOverlay";
 import { useGamepad } from "./input/useGamepad";
 import { ChatScreen } from "./screens/ChatScreen";
 import { SessionsScreen } from "./screens/SessionsScreen";
@@ -146,7 +146,7 @@ export default function App() {
         <ActiveScreen screen={screen} />
       </main>
       <ControllerHints hints={COMMON_HINTS} />
-      <OnScreenKeyboard />
+      <TextInputOverlay />
     </div>
   );
 }

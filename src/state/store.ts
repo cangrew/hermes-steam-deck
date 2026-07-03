@@ -38,8 +38,12 @@ export interface PendingApproval {
   detail?: string;
 }
 
+export type TypingMode = "wheel" | "grid";
+
 export interface Settings extends ConnectionConfig {
   model?: string;
+  /** Preferred on-screen text input surface. */
+  typingMode?: TypingMode;
 }
 
 interface AppState {
@@ -86,6 +90,7 @@ const DEFAULT_SETTINGS: Settings = {
   apiKey: "",
   sessionKey: "",
   model: "",
+  typingMode: "wheel",
 };
 
 function loadSettings(): Settings {
