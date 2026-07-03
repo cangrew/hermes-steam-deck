@@ -18,7 +18,7 @@ default template usually works out of the box.
 | D-pad / Left stick | Move focus                      |
 | A                  | Select / activate               |
 | B                  | Back / cancel / close keyboard  |
-| X                  | Open the on-screen keyboard     |
+| X                  | Open the keyboard               |
 | Y                  | Context menu / secondary action |
 | L1 / R1            | Previous / next tab             |
 | L2 / R2            | Scroll                          |
@@ -28,6 +28,29 @@ default template usually works out of the box.
 Note: the browser hides gamepads until the **first button press** — if nothing
 reacts right away, press any button once. You can verify what the app sees under
 **Settings → Input diagnostics**.
+
+### While the daisywheel keyboard is open
+
+The keyboard takes over the controller, so the mappings above do **not** apply
+until it closes — the on-screen hints show the live layout:
+
+| Control      | Does while typing                         |
+| ------------ | ----------------------------------------- |
+| Left stick   | Aim one of 8 petals                       |
+| Y / X / B / A| Type the petal's top / left / right / bottom char |
+| RT           | Space                                     |
+| LT           | Backspace (hold to repeat)                |
+| LB           | Shift (double-tap = caps lock)            |
+| RB           | Symbols layer                             |
+| D-pad ←/→    | Move word suggestion; ↑ accept, ↓ clear   |
+| Select       | Cancel (close without submitting)         |
+| Start        | Done (submit)                             |
+| R3           | Newline (multi-line fields)               |
+
+Because **B types a character** here, cancel moves to **Select**. Switch to the
+classic grid keyboard (where every key is a focusable button) with the on-screen
+**Grid keyboard** toggle; the choice is remembered. The grid keyboard keeps the
+usual mapping — D-pad moves between keys, A presses, B closes.
 
 ## Fallback: keyboard + mouse layout
 
