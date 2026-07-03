@@ -5,6 +5,13 @@ import { currentCapture } from "./gamepadCapture";
 import { BTN } from "./useGamepad";
 import { useOsk } from "../state/osk";
 
+// Deterministic word list so the suggestion bar renders synchronously.
+vi.mock("./predict/predict", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./predict/predict")>();
+  const WORDS = ["the", "there", "they", "their", "them"];
+  return { ...actual, loadedWords: () => WORDS, loadWords: () => Promise.resolve(WORDS) };
+});
+
 /** A synthetic capture frame: stick vector + a set of freshly-pressed buttons. */
 function frame(
   lx: number,
@@ -141,5 +148,24 @@ describe("DaisyWheel", () => {
     expect(currentCapture()).toBeTruthy();
     unmount();
     expect(currentCapture()).toBeNull();
+  });
+
+  it("D-pad navigates suggestions and up accepts the selected one", () => {
+    act(() => useOsk.setState({ value: "the" }));
+    render(<DaisyWheel />);
+    // The bar reports its list to the wheel after mount.
+    expect(screen.getByText("there")).toBeInTheDocument();
+    // Right moves selection from "there" to "they", then up accepts it.
+    feed(frame(0, 0, [BTN.DPAD_RIGHT]), frame(0, 0, [BTN.DPAD_UP]));
+    expect(useOsk.getState().value).toBe("they ");
+  });
+
+  it("tapping a suggestion completes the word", () => {
+    act(() => useOsk.setState({ value: "the" }));
+    render(<DaisyWheel />);
+    act(() => {
+      screen.getByText("their").click();
+    });
+    expect(useOsk.getState().value).toBe("their ");
   });
 });

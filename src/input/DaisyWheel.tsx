@@ -10,6 +10,8 @@ import {
   WHEEL_LAYERS,
   type ShiftState,
 } from "./wheelLayout";
+import { SuggestionBar } from "./predict/SuggestionBar";
+import { acceptSuggestion } from "./predict/predict";
 
 const BACKSPACE_FIRST_MS = 380;
 const BACKSPACE_REPEAT_MS = 110;
@@ -79,6 +81,7 @@ export function DaisyWheel({ onSwitchMode }: DaisyWheelProps) {
   const [sector, setSector] = useState<number | null>(null);
   const [shift, setShift] = useState<ShiftState>("off");
   const [symbols, setSymbols] = useState(false);
+  const [selected, setSelected] = useState(0);
 
   // The capture handler runs per animation frame; refs mirror the interactive
   // state so a single stable handler never sees stale closures.
@@ -87,6 +90,25 @@ export function DaisyWheel({ onSwitchMode }: DaisyWheelProps) {
   const symbolsRef = useRef(symbols);
   const lastShiftAt = useRef(-Infinity);
   const nextBackspaceAt = useRef(0);
+  const suggestionsRef = useRef<string[]>([]);
+  const selectedRef = useRef(0);
+
+  const setSelectedIndex = (i: number) => {
+    selectedRef.current = i;
+    setSelected(i);
+  };
+
+  const onSuggestions = (list: string[]) => {
+    suggestionsRef.current = list;
+    if (selectedRef.current >= list.length) setSelectedIndex(0);
+  };
+
+  const acceptSelected = () => {
+    const s = suggestionsRef.current[selectedRef.current];
+    if (!s) return;
+    useOsk.getState().setValue(acceptSuggestion(useOsk.getState().value, s));
+    setSelectedIndex(0);
+  };
 
   const updateShift = (next: ShiftState) => {
     shiftRef.current = next;
@@ -154,6 +176,20 @@ export function DaisyWheel({ onSwitchMode }: DaisyWheelProps) {
       if (frame.edge(BTN.R3) && useOsk.getState().multiline) {
         useOsk.getState().insert("\n");
       }
+
+      // D-pad drives the suggestion bar: left/right move the selection, up
+      // accepts, down clears it. (The stick, not the d-pad, aims the wheel.)
+      const count = suggestionsRef.current.length;
+      if (count) {
+        if (frame.edge(BTN.DPAD_LEFT)) {
+          setSelectedIndex((selectedRef.current + count - 1) % count);
+        }
+        if (frame.edge(BTN.DPAD_RIGHT)) {
+          setSelectedIndex((selectedRef.current + 1) % count);
+        }
+        if (frame.edge(BTN.DPAD_UP)) acceptSelected();
+      }
+      if (frame.edge(BTN.DPAD_DOWN)) setSelectedIndex(0);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -235,6 +271,18 @@ export function DaisyWheel({ onSwitchMode }: DaisyWheelProps) {
           </span>
         </div>
 
+        <SuggestionBar
+          value={value}
+          password={password}
+          mode="wheel"
+          selectedIndex={selected}
+          onAccept={(s) => {
+            useOsk.getState().setValue(acceptSuggestion(useOsk.getState().value, s));
+            setSelectedIndex(0);
+          }}
+          onSuggestions={onSuggestions}
+        />
+
         <div className="wheel-body">
           <svg
             className="wheel-svg"
@@ -294,6 +342,9 @@ export function DaisyWheel({ onSwitchMode }: DaisyWheelProps) {
               </span>
               <span className="hint">
                 <span className="hint-btn">RT</span> space
+              </span>
+              <span className="hint">
+                <span className="hint-btn">D-pad</span> suggestions
               </span>
               <span className="hint">
                 <span className="hint-btn">LT</span> backspace

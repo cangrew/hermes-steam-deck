@@ -881,6 +881,25 @@ code {
   color: var(--focus);
 }
 
+/* ---------- Suggestion bar (shared by wheel + grid) ---------- */
+.suggest-bar {
+  min-height: 44px;
+}
+.suggest {
+  flex: 1;
+  height: 44px;
+  font-size: 16px;
+  background: var(--bg-3);
+  color: var(--text);
+  max-width: 220px;
+}
+.suggest.selected {
+  border-color: var(--focus);
+  background: var(--user);
+  color: #fff;
+  font-weight: 600;
+}
+
 .placeholder {
   color: var(--muted);
   opacity: 0.7;

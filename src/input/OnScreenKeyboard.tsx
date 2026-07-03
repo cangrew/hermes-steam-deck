@@ -3,6 +3,8 @@ import { setFocus } from "@noriginmedia/norigin-spatial-navigation";
 import { useOsk } from "../state/osk";
 import { FocusableButton, FocusSection } from "./focusables";
 import { ROWS_LOWER, ROWS_SYMBOLS, ROWS_UPPER } from "./oskRows";
+import { SuggestionBar } from "./predict/SuggestionBar";
+import { acceptSuggestion } from "./predict/predict";
 
 type Layer = "lower" | "upper" | "symbols";
 
@@ -70,6 +72,13 @@ export function OnScreenKeyboard({ onSwitchMode }: OnScreenKeyboardProps) {
             <span className="osk-caret" />
           </span>
         </div>
+
+        <SuggestionBar
+          value={value}
+          password={password}
+          mode="grid"
+          onAccept={(s) => setValue(acceptSuggestion(value, s))}
+        />
 
         {rows.map((row, r) => (
           <div className="osk-row" key={r}>
